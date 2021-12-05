@@ -1,12 +1,17 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from "react";
 
 import TasksRows from "./TasksRows";
 
-const API_URL = 'http://localhost:4000';
+import {
+  getTasks,
+  startEdit,
+  saveEdition,
+  saveTask,
+  deleteTask,
+} from "./utils/Api.js";
 
 const TaskList = () => {
-
-  console.log('TaskList.render');
+  console.log("TaskList.render");
 
   const [tasks, setTasks] = useState([]);
   const [content, setContent] = useState("");
@@ -14,111 +19,44 @@ const TaskList = () => {
   const [taskInEdit, setTaskInEdit] = useState(null);
 
   useEffect(() => {
-    console.log('onMount');
-    getTasks();
-  }, []);    
+    console.log("onMount");
+    getTasksAndSetState();
+  }, []);
 
   const handleChange = (event) => {
     setContent(event.target.value);
   };
 
-  const getTasks = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/tasks`);
-      const data = await response.json();      
-      console.log("getTasks.data", data);  
-      setTasks(data.tasks);
-    } catch (error) {
-      console.log("getTasks.catch.error", error)
-    }
+  const getTasksAndSetState = async () => {
+    const data = await getTasks();
+    setTasks(data.tasks);
   };
 
-  const saveEdition = async () => {
-    try {
-
-      console.log("saveEdition");
-      const id = taskInEdit.id;
-
-      await fetch(`${API_URL}/api/task/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: content,
-        }),
-      });
-
-      setEditing(false);
-      setContent("");
-      setTaskInEdit(null);
-      getTasks();
-
-    } catch (error) {
-      console.log("saveEdition.catch.error", error);
-    }
+  const handleSaveTask = async () => {
+    await saveTask(content);
+    setContent("");
+    await getTasksAndSetState();
   };
 
-  const saveTask = async () => {
-    try {
-      console.log("saveTask");
-      await fetch(`${API_URL}/api/task`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: content,
-        }),
-      });
-
-      setContent("");
-      getTasks();
-      
-    } catch (error) {
-      console.log("saveTask.catch.error", error);
-    }    
+  const handleDeleteTask = async (id) => {
+    await deleteTask(id);
+    await getTasksAndSetState();
   };
 
-  const deleteTask = async (id) => {
-    try {
-      console.log("deleteTask.id", id);
-
-      await fetch(`${API_URL}/api/task/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-  
-      getTasks();
-    } catch (error) {
-      console.log("saveTask.catch.error", error);
-    }    
+  const handleSaveEdition = async () => {
+    const id = taskInEdit.id;
+    await saveEdition(id, content);
+    setEditing(false);
+    setContent("");
+    setTaskInEdit(null);
+    getTasksAndSetState();
   };
 
-  const startEdit = async (id) => {
-    try {
-      console.log("startEdit.id", id);
-
-      const response = await fetch(`${API_URL}/api/task/${id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-  
-      const decodedResponse = await response.json();
-  
-      console.log("startEdit.setState.decodedResponse", decodedResponse);
-  
-      setEditing(true);
-      setTaskInEdit({ id: id });
-  
-      setContent(decodedResponse.task.content);
-    } catch (error) {
-      console.log("startEdit.catch.error", error);
-    }    
+  const handleStartEdit = async (id) => {
+    const decodedResponse = await startEdit(id);
+    setEditing(true);
+    setTaskInEdit({ id: id });
+    setContent(decodedResponse.task.content);
   };
 
   return (
@@ -137,10 +75,9 @@ const TaskList = () => {
               value={content}
               onChange={handleChange}
             />
-            <button
-              className="btn"
-              onClick={editing ? saveEdition : saveTask}
-            >
+            <button className="btn" onClick={
+              editing ? handleSaveEdition : handleSaveTask
+            }>
               Save task
             </button>
           </div>
@@ -160,8 +97,8 @@ const TaskList = () => {
             <tbody>
               <TasksRows
                 tasks={tasks}
-                onDelete={deleteTask}
-                onEdit={startEdit}
+                onDelete={handleDeleteTask}
+                onEdit={handleStartEdit}
               />
             </tbody>
           </table>
