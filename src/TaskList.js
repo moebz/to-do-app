@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 
+import TaskEditor from "./TaskEditor";
 import TasksRows from "./TasksRows";
 
 import {
@@ -11,8 +12,6 @@ import {
 } from "./utils/Api.js";
 
 const TaskList = () => {
-  console.log("TaskList.render");
-
   const [tasks, setTasks] = useState([]);
   const [content, setContent] = useState("");
   const [editing, setEditing] = useState(false);
@@ -38,10 +37,10 @@ const TaskList = () => {
     await getTasksAndSetState();
   };
 
-  const handleDeleteTask = async (id) => {
+  const handleDeleteTask = React.useCallback(async (id) => {
     await deleteTask(id);
     await getTasksAndSetState();
-  };
+  }, []);
 
   const handleSaveEdition = async () => {
     const id = taskInEdit.id;
@@ -52,34 +51,27 @@ const TaskList = () => {
     getTasksAndSetState();
   };
 
-  const handleStartEdit = async (id) => {
-    const decodedResponse = await startEdit(id);
+  const handleStartEdit = React.useCallback(async (id) => {
+    const response = await startEdit(id);
     setEditing(true);
     setTaskInEdit({ id: id });
-    setContent(decodedResponse.task.content);
-  };
+    setContent(response.task.content);
+  }, []);
+
+  const onSave = editing ? handleSaveEdition : handleSaveTask;
+
+  console.log("TaskList.render");
 
   return (
     <div className="container grid-lg">
       <div className="columns">
         <div className="column col-xs-12">
           <div className="form-group">
-            <label className="form-label" htmlFor="input-example-3">
-              Task
-            </label>
-            <textarea
-              className="form-input mb-2"
-              id="input-example-3"
-              placeholder="Type the task here"
-              rows="3"
-              value={content}
-              onChange={handleChange}
+            <TaskEditor
+              content={content}
+              handleChange={handleChange}
+              onSave={onSave}            
             />
-            <button className="btn" onClick={
-              editing ? handleSaveEdition : handleSaveTask
-            }>
-              Save task
-            </button>
           </div>
         </div>
       </div>
