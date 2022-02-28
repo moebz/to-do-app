@@ -8,15 +8,15 @@ const TasksRows = ({
   console.log("TaskRows.render");
   return tasks.map((value, index, array) => {
     return (
-      <tr key={value.id}>
+      <tr key={value._id}>
         <td>{value.content}</td>
-        <td>{value.created_at}</td>
-        <td>{value.updated_at}</td>
+        <td>{value.createdAt}</td>
+        <td>{value.updatedAt}</td>
         <td>        
-          <button className="btn" onClick={() => onEdit(value.id)}>
+          <button className="btn" onClick={() => onEdit(value._id)}>
             Edit
           </button>          
-          <button className="btn" onClick={() => onDelete(value.id)}>
+          <button className="btn" onClick={() => onDelete(value._id)}>
             Delete
           </button>
         </td>
