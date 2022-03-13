@@ -3,7 +3,13 @@ import React from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
-const TasksRows = ({ tasks, onEdit, onDelete, loadingIndicators }) => {
+const TasksRows = ({
+  tasks,
+  onEdit,
+  onDelete,
+  deleteLoadingIndicators,
+  editLoadingIndicators,
+}) => {
   console.log("TaskRows.render");
 
   return tasks.map((value, index, array) => {
@@ -17,9 +23,9 @@ const TasksRows = ({ tasks, onEdit, onDelete, loadingIndicators }) => {
             className="btn"
             onClick={() => onEdit(value._id)}
             style={{ minWidth: "70px" }}
-            disabled={loadingIndicators?.[value._id]?.edit ? true : false}
+            disabled={editLoadingIndicators?.[value._id]}
           >
-            {loadingIndicators?.[value._id]?.edit ? (
+            {editLoadingIndicators?.[value._id] ? (
               <div className="loading" />
             ) : (
               "Edit"
@@ -29,9 +35,9 @@ const TasksRows = ({ tasks, onEdit, onDelete, loadingIndicators }) => {
             className="btn"
             onClick={() => onDelete(value._id)}
             style={{ minWidth: "70px" }}
-            disabled={loadingIndicators?.[value._id]?.delete ? true : false}
+            disabled={deleteLoadingIndicators?.[value._id]}
           >
-            {loadingIndicators?.[value._id]?.delete ? (
+            {deleteLoadingIndicators?.[value._id] ? (
               <div className="loading" />
             ) : (
               "Delete"

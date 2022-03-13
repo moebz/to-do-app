@@ -21,7 +21,9 @@ const TaskList = () => {
   const [taskInEdit, setTaskInEdit] = useState(null);
   const [isEditorLoading, setIsEditorLoading] = useState(false);
   const [isListLoading, setIsListLoading] = useState(true);
-  const [loadingIndicators, setLoadingIndicators] = useState(null);
+  const [deleteLoadingIndicators, setDeleteLoadingIndicators] = useState(null);
+  const [editLoadingIndicators, setEditLoadingIndicators] = useState(null);
+  const [isSavingLoading, setIsSavingLoading] = useState(false);
 
   useEffect(() => {
     console.log("onMount");
@@ -35,13 +37,22 @@ const TaskList = () => {
   const getTasksAndSetState = async () => {
     setIsListLoading(true);
     const data = await getTasks();
-    
-    let loadingIndicators = {};
-    data.tasks && data.tasks.forEach((task) => {
-      loadingIndicators[task._id] = {edit: false, delete: false};
-    }); 
+
+    let deleteLoadingIndicators = {};
+    data.tasks &&
+      data.tasks.forEach((task) => {
+        deleteLoadingIndicators[task._id] = false;
+      });
+
+    let editLoadingIndicators = {};
+    data.tasks &&
+      data.tasks.forEach((task) => {
+        editLoadingIndicators[task._id] = false;
+      });
+
     setTasks(data.tasks);
-    setLoadingIndicators(loadingIndicators);
+    setDeleteLoadingIndicators(deleteLoadingIndicators);
+    setEditLoadingIndicators(editLoadingIndicators);
     setIsListLoading(false);
   };
 
@@ -52,23 +63,27 @@ const TaskList = () => {
   };
 
   const handleDeleteTask = React.useCallback(async (id) => {
-    setLoadingIndicators({
-      ...loadingIndicators,
-      [id]: {
-        ...loadingIndicators?.[id],
-        delete: true,
-      }      
+    console.log({
+      "handleDeleteTask.deleteLoadingIndicators.start": deleteLoadingIndicators,
     });
-    
+    setDeleteLoadingIndicators((deleteLoadingIndicators) => {
+      return {
+        ...deleteLoadingIndicators,
+        [id]: true,
+      };
+    });
+
     await deleteTask(id);
-    
-    setLoadingIndicators({
-      ...loadingIndicators,
-      [id]: {
-        ...loadingIndicators?.[id],
-        delete: false,
-      }      
-    });    
+
+    console.log({
+      "handleDeleteTask.deleteLoadingIndicators.start": deleteLoadingIndicators,
+    });
+    setDeleteLoadingIndicators((deleteLoadingIndicators) => {
+      return {
+        ...deleteLoadingIndicators,
+        [id]: true,
+      };
+    });
     await getTasksAndSetState();
   }, []);
 
@@ -83,28 +98,40 @@ const TaskList = () => {
 
   const handleStartEdit = React.useCallback(async (id) => {
     setIsEditorLoading(true);
-    setLoadingIndicators({
-      ...loadingIndicators,
-      [id]: {
-        ...(loadingIndicators?.[id]?.delete),
-        edit: true,
-      }
+    console.log({
+      "handleStartEdit.editLoadingIndicators.start": editLoadingIndicators,
+    });
+    setEditLoadingIndicators((editLoadingIndicators) => {
+      return {
+        ...editLoadingIndicators,
+        [id]: true,
+      };
     });
     const response = await startEdit(id);
     setEditing(true);
     setTaskInEdit({ id: id });
     setContent(response.task.content);
     setIsEditorLoading(false);
-    setLoadingIndicators({
-      ...loadingIndicators,
-      [id]: {
-        ...(loadingIndicators?.[id]?.delete),
-        edit: false,
-      }
+    console.log({
+      "handleStartEdit.editLoadingIndicators.end": editLoadingIndicators,
+    });
+    setEditLoadingIndicators((editLoadingIndicators) => {
+      return {
+        ...editLoadingIndicators,
+        [id]: false,
+      };
     });
   }, []);
 
-  const onSave = editing ? handleSaveEdition : handleSaveTask;
+  const handleSave = async () => {
+    setIsSavingLoading(true);
+    if (editing) {
+      await handleSaveEdition();
+    } else {
+      await handleSaveTask();
+    }
+    setIsSavingLoading(false);
+  };
 
   console.log("TaskList.render");
 
@@ -116,8 +143,9 @@ const TaskList = () => {
             <TaskEditor
               content={content}
               handleChange={handleChange}
-              onSave={onSave}
+              onSave={handleSave}
               isLoading={isEditorLoading}
+              isSavingLoading={isSavingLoading}
             />
           </div>
         </div>
@@ -143,7 +171,8 @@ const TaskList = () => {
                   onDelete={handleDeleteTask}
                   onEdit={handleStartEdit}
                   isLoading={isListLoading}
-                  loadingIndicators={loadingIndicators}
+                  deleteLoadingIndicators={deleteLoadingIndicators}
+                  editLoadingIndicators={editLoadingIndicators}
                 />
               </tbody>
             </table>

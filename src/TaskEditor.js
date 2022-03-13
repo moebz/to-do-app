@@ -2,12 +2,10 @@ import React from "react";
 
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import SpectreLoader from "./utils/SpectreLoader";
 
-function SpectreLoading() {
-  return <div className="loading loading-lg" />;
-}
 
-function TaskEditor({ content, onSave, handleChange, isLoading }) {
+function TaskEditor({ content, onSave, handleChange, isLoading, isSavingLoading }) {
   console.log("TaskEditor.render");
   return (
     <div>
@@ -26,8 +24,8 @@ function TaskEditor({ content, onSave, handleChange, isLoading }) {
           style={{ height: "4rem" }}
         />
       )}
-      <button className="btn" onClick={onSave}>
-        Save task
+      <button className="btn" onClick={onSave} disabled={isSavingLoading ? true : false} style={{minWidth: '75px'}}>
+        {isSavingLoading ? <SpectreLoader/> : 'Save task'}
       </button>
     </div>
   );
