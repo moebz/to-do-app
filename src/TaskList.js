@@ -24,6 +24,10 @@ const TaskList = () => {
   const [deleteLoadingIndicators, setDeleteLoadingIndicators] = useState(null);
   const [editLoadingIndicators, setEditLoadingIndicators] = useState(null);
   const [isSavingLoading, setIsSavingLoading] = useState(false);
+  const [generalMessage, setGeneralMessage] = useState({
+    text: "",
+    type: ""
+  });
 
   useEffect(() => {
     console.log("onMount");
@@ -57,9 +61,17 @@ const TaskList = () => {
   };
 
   const handleSaveTask = async () => {
-    await saveTask(content);
-    setContent("");
-    await getTasksAndSetState();
+    try {
+      await saveTask(content);
+      await getTasksAndSetState();
+    } catch (error) {
+      console.log("handleSaveTask.catch.error");
+      console.log(error);
+      setGeneralMessage({
+        type: "error",
+        text: "An error occurred while trying to save the task.",
+      });
+    }
   };
 
   const handleDeleteTask = React.useCallback(async (id) => {
@@ -133,13 +145,22 @@ const TaskList = () => {
     setIsSavingLoading(false);
   };
 
-  console.log("TaskList.render");
+  console.log("Container.render");
 
   return (
     <div className="container grid-lg">
       <div className="columns">
         <div className="column col-xs-12">
           <div className="form-group">
+            {generalMessage?.text && (<div class={"toast toast-" + (generalMessage?.type ? generalMessage.type : "primary")}>
+              <button class="btn btn-clear float-right" onClick={() => {
+                setGeneralMessage({
+                  text: "",
+                  type: "",
+                })
+              }}></button>
+              {generalMessage.text}
+            </div>)}
             <TaskEditor
               content={content}
               handleChange={handleChange}
