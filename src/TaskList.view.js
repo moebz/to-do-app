@@ -46,11 +46,6 @@ export default function TaskListView({
       </div>
       <div className="container grid-lg">
         <div className="columns">
-          <div className="column">
-            <button className="btn float-right" onClick={getTasksAndSetState}>Reload</button>
-          </div>
-        </div>
-        <div className="columns">
           <div className="column">          
             <div className="form-group">
               <Message
