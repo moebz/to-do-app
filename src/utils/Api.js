@@ -10,15 +10,10 @@ const axiosInst = axios.create({
   },
 });
 
-const getTasks = async () => {
-  try {
-    await sleep(3000);
-    const response = await axiosInst.get(`/api/tasks`);
-    console.log("getTasks.data", response);
-    return response.data;
-  } catch (error) {
-    console.log("getTasks.catch.error", error);
-  }
+const getTasks = async (signal) => {
+  const response = await axiosInst.get(`/api/tasks`, { signal });
+  console.log("getTasks.data", response);
+  return response.data;
 };
 
 const startEdit = async (id) => {

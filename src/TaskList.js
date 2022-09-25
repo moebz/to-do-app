@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -15,6 +15,7 @@ import {
 } from "./utils/Api.js";
 
 const TaskList = () => {
+  const abortControllerRef = useRef(null);
   const [tasks, setTasks] = useState([]);
   const [content, setContent] = useState("");
   const [editing, setEditing] = useState(false);
@@ -26,7 +27,7 @@ const TaskList = () => {
   const [isSavingLoading, setIsSavingLoading] = useState(false);
   const [generalMessage, setGeneralMessage] = useState({
     text: "",
-    type: ""
+    type: "",
   });
 
   useEffect(() => {
@@ -39,25 +40,47 @@ const TaskList = () => {
   };
 
   const getTasksAndSetState = async () => {
-    setIsListLoading(true);
-    const data = await getTasks();
+    try {
+      setIsListLoading(true);
+      
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }     
 
-    let deleteLoadingIndicators = {};
-    data.tasks &&
-      data.tasks.forEach((task) => {
-        deleteLoadingIndicators[task._id] = false;
-      });
+      abortControllerRef.current = new AbortController();
+      const data = await getTasks(abortControllerRef.current.signal);
+      abortControllerRef.current = null;      
 
-    let editLoadingIndicators = {};
-    data.tasks &&
-      data.tasks.forEach((task) => {
-        editLoadingIndicators[task._id] = false;
-      });
+      let deleteLoadingIndicators = {};
+      data.tasks &&
+        data.tasks.forEach((task) => {
+          deleteLoadingIndicators[task._id] = false;
+        });
 
-    setTasks(data.tasks);
-    setDeleteLoadingIndicators(deleteLoadingIndicators);
-    setEditLoadingIndicators(editLoadingIndicators);
-    setIsListLoading(false);
+      let editLoadingIndicators = {};
+      data.tasks &&
+        data.tasks.forEach((task) => {
+          editLoadingIndicators[task._id] = false;
+        });
+
+      setTasks(data.tasks);
+      setDeleteLoadingIndicators(deleteLoadingIndicators);
+      setEditLoadingIndicators(editLoadingIndicators);
+      setIsListLoading(false);
+    } catch (error) {
+      console.log("getTasksAndSetState.catch.error");
+      console.log(error);
+
+      // error.message es canceled
+      // cuando se aborta el request
+
+      if (error.message !== 'canceled') {
+        setGeneralMessage({
+          type: "error",
+          text: "An error occurred while trying to get the tasks.",
+        });
+      }
+    }
   };
 
   const handleSaveTask = async () => {
@@ -151,16 +174,27 @@ const TaskList = () => {
     <div className="container grid-lg">
       <div className="columns">
         <div className="column col-xs-12">
+        <button onClick={getTasksAndSetState}>Recargar</button>
           <div className="form-group">
-            {generalMessage?.text && (<div class={"toast toast-" + (generalMessage?.type ? generalMessage.type : "primary")}>
-              <button class="btn btn-clear float-right" onClick={() => {
-                setGeneralMessage({
-                  text: "",
-                  type: "",
-                })
-              }}></button>
-              {generalMessage.text}
-            </div>)}
+            {generalMessage?.text && (
+              <div
+                className={
+                  "toast toast-" +
+                  (generalMessage?.type ? generalMessage.type : "primary")
+                }
+              >
+                <button
+                  className="btn btn-clear float-right"
+                  onClick={() => {
+                    setGeneralMessage({
+                      text: "",
+                      type: "",
+                    });
+                  }}
+                ></button>
+                {generalMessage.text}
+              </div>
+            )}
             <TaskEditor
               content={content}
               handleChange={handleChange}
