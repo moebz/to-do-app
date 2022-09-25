@@ -23,7 +23,7 @@ const TasksRows = ({
             className="btn"
             onClick={() => onEdit(value._id)}
             style={{ minWidth: "70px" }}
-            disabled={editLoadingIndicators?.[value._id]}
+            disabled={editLoadingIndicators?.[value._id] || deleteLoadingIndicators?.[value._id]}
           >
             {editLoadingIndicators?.[value._id] ? (
               <div className="loading" />

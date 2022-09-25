@@ -3,8 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
-import TaskEditor from "./TaskEditor";
-import TasksRows from "./TasksRows";
+import TaskListView from "./TaskList.view";
 
 import {
   getTasks,
@@ -42,14 +41,14 @@ const TaskList = () => {
   const getTasksAndSetState = async () => {
     try {
       setIsListLoading(true);
-      
+
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
-      }     
+      }
 
       abortControllerRef.current = new AbortController();
       const data = await getTasks(abortControllerRef.current.signal);
-      abortControllerRef.current = null;      
+      abortControllerRef.current = null;
 
       let deleteLoadingIndicators = {};
       data.tasks &&
@@ -71,8 +70,8 @@ const TaskList = () => {
       console.log("getTasksAndSetState.catch.error");
       console.log(error);
 
-      // error.message es canceled
-      // cuando se aborta el request
+      // error.message is canceled
+      // when request is aborted
 
       if (error.message !== 'canceled') {
         setGeneralMessage({
@@ -109,16 +108,6 @@ const TaskList = () => {
     });
 
     await deleteTask(id);
-
-    console.log({
-      "handleDeleteTask.deleteLoadingIndicators.start": deleteLoadingIndicators,
-    });
-    setDeleteLoadingIndicators((deleteLoadingIndicators) => {
-      return {
-        ...deleteLoadingIndicators,
-        [id]: true,
-      };
-    });
     await getTasksAndSetState();
   }, []);
 
@@ -131,32 +120,39 @@ const TaskList = () => {
     getTasksAndSetState();
   };
 
-  const handleStartEdit = React.useCallback(async (id) => {
+  const startEditHelper = async (id) => {
+
     setIsEditorLoading(true);
-    console.log({
-      "handleStartEdit.editLoadingIndicators.start": editLoadingIndicators,
-    });
+
+    console.log("handleStartEdit.editLoadingIndicators.start");
+    console.log(editLoadingIndicators);
+
     setEditLoadingIndicators((editLoadingIndicators) => {
       return {
         ...editLoadingIndicators,
         [id]: true,
       };
     });
+
     const response = await startEdit(id);
+
     setEditing(true);
     setTaskInEdit({ id: id });
     setContent(response.task.content);
     setIsEditorLoading(false);
-    console.log({
-      "handleStartEdit.editLoadingIndicators.end": editLoadingIndicators,
-    });
+
+    console.log("handleStartEdit.editLoadingIndicators.end");
+    console.log(editLoadingIndicators);
+
     setEditLoadingIndicators((editLoadingIndicators) => {
       return {
         ...editLoadingIndicators,
         [id]: false,
       };
     });
-  }, []);
+  };
+
+  const handleStartEdit = React.useCallback(startEditHelper, []);  
 
   const handleSave = async () => {
     setIsSavingLoading(true);
@@ -168,74 +164,34 @@ const TaskList = () => {
     setIsSavingLoading(false);
   };
 
-  console.log("Container.render");
+  const clearMessage = () => {
+    setGeneralMessage({
+      text: "",
+      type: "",
+    });
+  };
 
-  return (
-    <div className="container grid-lg">
-      <div className="columns">
-        <div className="column col-xs-12">
-        <button onClick={getTasksAndSetState}>Recargar</button>
-          <div className="form-group">
-            {generalMessage?.text && (
-              <div
-                className={
-                  "toast toast-" +
-                  (generalMessage?.type ? generalMessage.type : "primary")
-                }
-              >
-                <button
-                  className="btn btn-clear float-right"
-                  onClick={() => {
-                    setGeneralMessage({
-                      text: "",
-                      type: "",
-                    });
-                  }}
-                ></button>
-                {generalMessage.text}
-              </div>
-            )}
-            <TaskEditor
-              content={content}
-              handleChange={handleChange}
-              onSave={handleSave}
-              isLoading={isEditorLoading}
-              isSavingLoading={isSavingLoading}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="columns">
-        <div className="column col-xs-12">
-          {isListLoading ? (
-            <Skeleton count={4} height="3rem" />
-          ) : (
-            <table className="table table-striped table-hover">
-              <thead>
-                <tr>
-                  <th>Task</th>
-                  <th>Date created</th>
-                  <th>Date updated</th>
-                  <th></th>
-                </tr>
-              </thead>
+  return (<TaskListView
+    getTasksAndSetState={getTasksAndSetState}
+    tasks={tasks}
 
-              <tbody>
-                <TasksRows
-                  tasks={tasks}
-                  onDelete={handleDeleteTask}
-                  onEdit={handleStartEdit}
-                  isLoading={isListLoading}
-                  deleteLoadingIndicators={deleteLoadingIndicators}
-                  editLoadingIndicators={editLoadingIndicators}
-                />
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+    generalMessage={generalMessage}
+    clearMessage={clearMessage}
+
+    content={content}
+    handleChange={handleChange}
+
+    handleStartEdit={handleStartEdit}
+    handleSave={handleSave}
+    handleDeleteTask={handleDeleteTask}
+
+    isListLoading={isListLoading}
+    isEditorLoading={isEditorLoading}
+    isSavingLoading={isSavingLoading}
+    
+    deleteLoadingIndicators={deleteLoadingIndicators}
+    editLoadingIndicators={editLoadingIndicators}
+  />);
 };
 
 export default TaskList;
