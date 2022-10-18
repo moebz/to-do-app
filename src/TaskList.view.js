@@ -14,6 +14,7 @@ export default function TaskListView({
   isEditorLoading,
   isSavingLoading,
   tasks,
+  tasksFetchingStatus,
   handleDeleteTask,
   handleStartEdit,
   isListLoading,
@@ -72,6 +73,7 @@ export default function TaskListView({
               isListLoading={isListLoading}
               deleteLoadingIndicators={deleteLoadingIndicators}
               editLoadingIndicators={editLoadingIndicators}
+              tasksFetchingStatus={tasksFetchingStatus}
             />
           </div>
         </div>

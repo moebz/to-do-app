@@ -1,7 +1,11 @@
 import React from "react";
 
+import moment from 'moment';
+
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+
+moment.locale('es');
 
 const TasksRows = ({
   tasks,
@@ -16,8 +20,12 @@ const TasksRows = ({
     return (
       <tr key={value._id}>
         <td>{value.content}</td>
-        <td>{value.createdAt}</td>
-        <td>{value.updatedAt}</td>
+        <td>{moment.utc(
+          value.createdAt
+        ).format('llll')}</td>
+        <td>{moment.utc(
+          value.updatedAt
+        ).format('llll')}</td>
         <td>
           <button
             className="btn"

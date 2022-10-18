@@ -16,6 +16,7 @@ import {
 const TaskList = () => {
   const abortControllerRef = useRef(null);
   const [tasks, setTasks] = useState([]);
+  const [tasksFetchingStatus, setTasksFetchingStatus] = useState('default');
   const [content, setContent] = useState("");
   const [editing, setEditing] = useState(false);
   const [taskInEdit, setTaskInEdit] = useState(null);
@@ -78,6 +79,8 @@ const TaskList = () => {
           type: "error",
           text: "An error occurred while trying to get the tasks.",
         });
+        setIsListLoading(false);
+        setTasksFetchingStatus('error');
       }
     }
   };
@@ -174,6 +177,7 @@ const TaskList = () => {
   return (<TaskListView
     getTasksAndSetState={getTasksAndSetState}
     tasks={tasks}
+    tasksFetchingStatus={tasksFetchingStatus}
 
     generalMessage={generalMessage}
     clearMessage={clearMessage}

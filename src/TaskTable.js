@@ -11,10 +11,15 @@ export default function TaskTable({
   isListLoading,
   deleteLoadingIndicators,
   editLoadingIndicators,
+  tasksFetchingStatus,
 }) {
+
+  console.log('TaskTable.tasksFetchingStatus', tasksFetchingStatus);
 
   if (isListLoading) {
     return (<Skeleton count={4} height="3rem" />);
+  } else if (tasksFetchingStatus === 'error') {
+    return null;
   }
 
   return (
@@ -22,8 +27,8 @@ export default function TaskTable({
       <thead>
         <tr>
           <th>Task</th>
-          <th>Date created</th>
-          <th>Date updated</th>
+          <th>Created</th>
+          <th>Last update</th>
           <th></th>
         </tr>
       </thead>
